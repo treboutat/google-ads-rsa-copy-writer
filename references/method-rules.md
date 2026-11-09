@@ -32,7 +32,7 @@ Anchor copy to the need instead of repeating every keyword. Website creation, la
 
 Shared copy is valid when it serves the searches well. Competitor keywords can share one ad group with keyword-level final URLs pointing to the relevant comparison pages ([Google keyword destinations](https://support.google.com/google-ads/answer/6371202?hl=en)). Separate groups remain an option when the copy or management needs differ. Do not manufacture differences just to make every ad unique.
 
-Write brand copy for the branded task the campaign should serve. Acquisition, pricing, login and support are different needs. Competitor copy must make the advertiser's identity and offer clear. Do not imply affiliation or repeat a competitor's claim as the advertiser's own. When one ad group serves several competitors, keep competitor names out of the shared copy (a headline naming one would show to people searching another); name a competitor only in an ad group dedicated to it, and only with substantiation and a policy check.
+Write brand copy for the branded task the campaign should serve. Acquisition, pricing, login and support are different needs. Competitor copy must make the advertiser's identity and offer clear. Do not imply affiliation or repeat a competitor's claim as the advertiser's own. When one ad group serves several competitors, keep competitor names out of the shared copy, because a headline naming one would show to people searching another. A comparison claim about a competitor needs substantiation and a current policy check.
 
 ## 3. Write useful assets within the real limits
 
@@ -42,7 +42,7 @@ Write brand copy for the branded task the campaign should serve. Acquisition, pr
 | Descriptions | 2 to 4; up to 90 characters each |
 | Display paths | Optional; up to 15 characters per field |
 
-Count spaces and punctuation. Double-width characters count twice. Validate final text with the platform's rules, not a word-processor count ([Google RSA specifications](https://support.google.com/google-ads/answer/7684791?hl=en)). These are field limits, not a reason to stop early.
+Count spaces and punctuation. Double-width characters count twice. Validate final text with the platform's rules, not a word-processor count ([Google RSA specifications](https://support.google.com/google-ads/answer/7684791?hl=en)). These are field constraints, not a requirement to fill every slot.
 
 Normally fill all 15 headline and four description slots with useful, truthful variation. Work through the product or problem, meaningful capabilities, outcomes, supportable proof, qualifiers, objection answers and relevant calls to action. For a well-understood offer it should not be hard to find enough angles. If a first pass stops at ten headlines, keep going before calling it complete.
 
@@ -86,7 +86,7 @@ Check spelling, counts, duplication, offer consistency, every allowed combinatio
 
 Read Ad Strength's specific suggestions. It is not a serving requirement or an input to Ad Rank or Quality Score. Its diagnosis includes keyword relevance, combinations and sitelinks. "Average" does not mean an ad is missing headlines or performing badly. Fix useful omissions; do not remove qualifications, invent assets or enable automation only to raise the grade ([Google Ad Strength](https://support.google.com/google-ads/answer/9921843?hl=en)).
 
-Normally prepare two meaningfully different RSAs per ad group when the offer supports useful variation. Google's current guidance recommends at least two, each with a unique final URL. Treat that as guidance: use the page that fits, and do not manufacture a second destination or a near-duplicate ad to meet a count. Up to three RSAs can be enabled per ad group, and existing enabled ads count toward that limit ([Google account limits](https://support.google.com/google-ads/answer/6372658?hl=en)).
+Normally prepare two meaningfully different RSAs per ad group when the offer supports useful variation. Google's current guidance recommends at least two, each with a unique final URL. Treat that as guidance: use the page that fits, and do not manufacture a second destination or a near-duplicate ad to meet a count ([Google RSA recommendation](https://support.google.com/google-ads/answer/9921843?hl=en)). Up to three RSAs can be enabled per ad group, and existing enabled ads count toward that limit ([Google account limits](https://support.google.com/google-ads/answer/6372658?hl=en)).
 
 For each proposed RSA, deliver:
 

@@ -15,7 +15,7 @@ Pinning restricts combinations. The skill pins only for a named message that mus
 Any number, price, guarantee, comparison or superlative needs a source. A claim that appears in a brief without one is left out and listed, following Google's unreliable-claims policy and basic honesty with buyers.
 
 ## Platform facts
-Character limits, double-width counting, pinning behavior, asset flexibility, keyword insertion, the three-enabled-RSA limit, Editor column names and reporting changes link to Google's documentation and were checked in October 2026. Google changes the platform often; re-verify before a decision depends on one. The validator encodes the limits as of that date.
+Character limits, double-width counting, pinning behavior, asset flexibility, keyword insertion, the three-enabled-RSA limit and reporting changes link to Google's documentation and were checked in October 2026. The upload column names were checked against the field names in Google Ads Editor 14.12 (November 2026); Google doesn't publish an Editor column reference for RSA pins, and the pin values (`1`, `2`, `3`) weren't confirmed against an Editor export, so `references/output-spec.md` says how to check before a large import. Google changes the platform often; re-verify before a decision depends on one. The validator encodes the limits as of these dates.
 
 ## What this skill deliberately does not claim
 - No client names or client results. Worked examples and test fixtures are fictional.

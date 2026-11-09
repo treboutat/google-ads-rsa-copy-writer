@@ -17,9 +17,9 @@ cp -r references scripts ~/.claude/skills/google-ads-rsa-copy-writer/
 ```
 Then say "write RSAs for these ad groups" and share the context below. The validator needs only Python 3.
 
-**In Claude.ai:** zip this folder and upload it as a custom skill in Claude's skills settings, or add `SKILL.md` and `references/method-rules.md` to a project.
+**In Claude.ai:** zip this folder and upload it as a custom skill in Claude's skills settings, or add `SKILL.md`, `references/method-rules.md` and `references/output-spec.md` to a project. A project can't run the validator, so character counts and pins are checked by hand there; Claude Code or an upload with code execution runs the script.
 
-**As a plain SOP:** read `SKILL.md` and `references/method-rules.md`. They are a complete procedure even if you never run them through Claude.
+**As a plain SOP:** read `SKILL.md`, `references/method-rules.md` and `references/output-spec.md`. They are a complete procedure even if you never run them through Claude.
 
 ## What you provide
 1. The campaigns and ad groups with their keyword themes (search terms that triggered the ads help even more).
@@ -33,7 +33,7 @@ It works with partial context, writes what it can, and lists what it couldn't su
 
 ## What you get
 - **Review file:** a Summary per ad group (what changes, each RSA's angle, claims left out and why, required messages and how they're protected, open dependencies), an RSA Copy tab with every asset, its character count, pin and source, and a QA tab with the checks actually run.
-- **`rsa_upload.csv`:** new RSAs only, Paused, in Google Ads Editor's column layout, checked by `scripts/validate_rsa.py`. Edits to existing ads are listed for an in-place change so the ad keeps its ID and history.
+- **`rsa_upload.csv`:** new RSAs only, Paused, in Google Ads Editor's column layout, checked by `scripts/validate_rsa.py`. Edits to existing ads go in a separate review file (not for import) and are applied in place so each ad keeps its ID and history.
 
 ## How it writes
 - A full set of useful assets is the normal standard: 15 headlines and four descriptions, or a stated reason for fewer. No padding, no invented proof.
@@ -46,7 +46,7 @@ It works with partial context, writes what it can, and lists what it couldn't su
 - `SKILL.md`: the workflow
 - `references/method-rules.md`: the judgment rules, with links to Google's documentation
 - `references/output-spec.md`: the review file and the Editor upload layout
-- `scripts/validate_rsa.py`: character limits (including double-width characters and keyword-insertion fallbacks), duplicates, paths, pin positions and fill, upload-row checks, and the three-enabled-RSAs limit against your current ads (`--existing`). `--counts` prints every asset's length; `--edits` checks in-place edits to existing ads
+- `scripts/validate_rsa.py` (Python 3, no packages): character limits measured as the ad renders (double-width characters, keyword insertion, customizers and IF functions), duplicates, paths, pin values and fill, punctuation that policy often rejects, upload-row checks, and the three-enabled-RSAs limit against a UI or Editor export of your current ads (`--existing`). `--counts` prints every asset's length; `--edits` checks a review file of in-place edits
 - `tests/`: a worked example and edge cases (competitor ad group, required qualifier with a disclaimer asset, refreshing a working ad), plus unit tests for the validator (`python3 -m unittest discover -s tests/scripts`)
 
 ## Related skills

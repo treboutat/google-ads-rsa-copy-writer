@@ -24,7 +24,7 @@ One row per asset, so counts and notes stay readable.
 | Column | Content |
 |---|---|
 | Campaign | Exact campaign name (or ID) |
-| Ad group | Exact ad-group name (or ID) |
+| Ad Group | Exact ad-group name (or ID) |
 | RSA | `RSA A`, `RSA B` for new ads; the Ad ID for an existing ad |
 | Action | `Create`, `Edit`, `Keep` or `Pause` |
 | Proposed status | `Paused` for new ads; current status for edits and keeps |
@@ -59,19 +59,19 @@ New RSAs only, one row per ad, every row `Paused`. Apply edits to an existing ad
 Columns, in this order (leave unused asset and position cells blank):
 
 ```
-Campaign, Ad group, Ad type, Status,
+Campaign, Ad Group, Ad type, Status,
 Headline 1 … Headline 15,
 Headline 1 position … Headline 15 position,
 Description 1 … Description 4,
 Description 1 position … Description 4 position,
-Path 1, Path 2, Final URL, Mobile final URL, Tracking template, Final URL suffix
+Path 1, Path 2, Final URL, Final mobile URL, Tracking template, Final URL suffix
 ```
 
 - `Ad type` is `Responsive search ad`.
 - Position cells hold `1`, `2` or `3` for headlines and `1` or `2` for descriptions; blank means unpinned.
 - Quote any field containing a comma.
-- Column names follow Google Ads Editor's RSA columns as of October 2026. Before a large import, export one existing RSA from Editor and compare headers; if Editor has renamed a column, rename it here and in `scripts/validate_rsa.py` together.
+- Column names match the field names in Google Ads Editor 14.12 (November 2026). Capitalization doesn't matter to the validator. The pin values (`1`, `2`, `3`) follow Google's pin positions but were not confirmed against an Editor export: before the first large import, export one pinned RSA from Editor, compare the header and position values, and fix this spec and `scripts/validate_rsa.py` together if they differ.
 
-Run `python3 <skill-folder>/scripts/validate_rsa.py rsa_upload.csv --counts` before handing the file over. Add `--existing current_ads.csv` (an export of current ads with Campaign, Ad group, Ad type and Status, or a minimal CSV written from ads the user pasted) to check the three-enabled limit per ad group.
+Run `python3 <skill-folder>/scripts/validate_rsa.py rsa_upload.csv --counts` before handing the file over. Add `--existing current_ads.csv` (a Google Ads UI or Editor export of current ads with Campaign, Ad Group, Ad type and the ad's status; UTF-8 or UTF-16, comma or tab separated, title rows are fine. Or a minimal CSV written from ads the user pasted) to check the three-enabled limit per ad group.
 
-Edits to existing ads go in a separate file (`rsa_edits.csv`) in the same layout plus an `Ad ID` column, with the full new asset set, current status and existing final URL. List removed assets in the review file. Run it with `--edits`, which applies the field and pin checks but not the new-ad rules (Paused status).
+Edits to existing ads go in a separate review file, `rsa_edits_review.csv`, in the same layout plus an `Ad ID` column, with the full new asset set, current status and existing final URL. It is for checking, **not for import**: importing it could create new enabled ads instead of editing the existing ones. Apply edits in place in the Google Ads UI, Editor or API so each ad keeps its ID and history. List removed assets in the review file. If the user didn't give the Ad ID, write a label such as `existing RSA 1 (ID needed)` and list getting the ID as an open dependency. Run it with `--edits`, which requires `Ad ID` and applies the field and pin checks but not the new-ad Paused rule.

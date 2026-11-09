@@ -78,13 +78,13 @@ Build `rsa_upload.csv` in the layout in [references/output-spec.md](references/o
 python3 <skill-folder>/scripts/validate_rsa.py rsa_upload.csv --existing current_ads.csv --counts
 ```
 
-- `--existing` takes an export of current ads (Campaign, Ad group, Ad type, Status). If the user pasted their ads instead, write that minimal CSV from what they gave. Omit it for a brand-new ad group and state the count (0 existing) in QA.
+- `--existing` takes a Google Ads UI or Editor export of current ads (Campaign, Ad Group, Ad type and the ad's status). If the user pasted their ads instead, write that minimal CSV from what they gave. Omit it for a brand-new ad group and state the count (0 existing) in QA.
 - `--counts` prints every asset's display length; use those numbers in the RSA Copy tab.
-- Edits to existing ads don't go in the upload file. Put them in a second file in the same layout with their current status and run it with `--edits` so field and pin checks still apply.
+- Edits to existing ads don't go in the upload file. Put them in `rsa_edits_review.csv` (same layout plus `Ad ID`, current status) and run it with `--edits` so field and pin checks still apply. That file is for review, not import; edits are applied in place.
 
 Fix every PROBLEM line. Carry every note into the QA tab with the decision taken. The script needs only Python 3; no packages.
 
-If you cannot run code, count characters per the rules (spaces and punctuation count, double-width characters count twice, keyword insertion counts its fallback) and say in the QA tab that the counts were checked by hand.
+If you cannot run code (for example in a Claude.ai project), count characters per the rules (spaces and punctuation count, double-width characters count twice, keyword insertion and customizers count their default text) and say in the QA tab that the counts and pins were checked by hand, not by the validator.
 
 Then review what a script cannot: claims against sources, every risky combination, CTA against page, the other RSAs in the ad group (their assets can be borrowed), and the settings from step 5.
 

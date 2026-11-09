@@ -76,10 +76,36 @@ class FieldTest(unittest.TestCase):
         self.assertIn('Path 2 without Path 1', problems)
         self.assertTrue(any('empty keyword-insertion fallback' in p for p in problems))
 
-    def test_other_dynamic_tokens_are_notes_not_problems(self):
-        problems, notes = v.validate(H15[:14] + ['{LOCATION(City)} Plumbers'], D4)
+    def test_dynamic_text_measured_as_rendered(self):
+        self.assertEqual(v.display_len('{CUSTOMIZER.Price:From $500} Plans'), len('From $500 Plans'))
+        self.assertEqual(v.display_len('{=IF(device=mobile,Call Now):Visit Our Site}'), len('Visit Our Site'))
+        self.assertEqual(v.display_len('{=IF(device=mobile,Call Us From Your Phone):Visit}'),
+                         len('Call Us From Your Phone'))
+        problems, notes = v.validate(
+            H15[:12] + ['Sale Ends {COUNTDOWN(2026/12/01 00:00:00,5)}', '{LOCATION(City)} Plumbers',
+                        '{CUSTOMIZER.Price:From $500} Plans'], D4)
         self.assertEqual(problems, [])
-        self.assertTrue(any('manual length' in n for n in notes))
+        self.assertEqual(sum('excludes' in n for n in notes), 2)
+        problems, _ = v.validate(H15[:14] + ['{CUSTOMIZER.Price:Plans From $500 For Every Team Size}'], D4)
+        self.assertTrue(any('headline >30' in p for p in problems))
+
+    def test_two_if_functions_and_empty_customizer(self):
+        two = '{=IF(device=mobile,AAAAAAAAAAAAAAA):B} {=IF(device=mobile,C):DDDDDDDDDDDDDDD}'
+        self.assertEqual(v.display_len(two), 31)
+        problems, _ = v.validate(H15[:14] + [two], D4)
+        self.assertTrue(any('headline >30' in p for p in problems))
+        problems, _ = v.validate(H15[:14] + ['{CUSTOMIZER.Price:} Plans'], D4)
+        self.assertTrue(any('empty customizer default' in p for p in problems))
+
+    def test_punctuation_notes(self):
+        _, notes = v.validate(H15, D4[:3] + ['Wait... Now?! Limited spots.'])
+        self.assertTrue(any('repeated punctuation' in n for n in notes))
+        _, notes = v.validate(H15, D4[:3] + ['More to come... soon.'])
+        self.assertFalse(any('repeated punctuation' in n for n in notes))
+        problems, notes = v.validate(H15[:14] + ['Book Today!'], D4[:3] + ['Call now!! Limited spots.'])
+        self.assertEqual(problems, [])
+        self.assertTrue(any('exclamation mark in a headline' in n for n in notes))
+        self.assertTrue(any('repeated punctuation' in n for n in notes))
 
 
 class PinTest(unittest.TestCase):
@@ -90,10 +116,12 @@ class PinTest(unittest.TestCase):
         self.assertTrue(any('H1 <- headline 1/2' in n and 'D1 <- description 1' in n for n in notes))
 
     def test_bad_position_values(self):
-        problems, _ = v.validate(H15, D4, headline_pins=['4'] + [''] * 14,
-                                 description_pins=['', 'H3', '', ''])
-        self.assertIn('Headline 1 position 4 (allowed: 1, 2, 3)', problems)
-        self.assertIn('Description 2 position 3 (allowed: 1, 2)', problems)
+        for bad in ('4', 'H1', 'D1', 'HD2', '1.7', 'inf', '01', '+1', '4.0'):
+            problems, _ = v.validate(H15, D4, headline_pins=[bad] + [''] * 14)
+            self.assertEqual(problems, [f"Headline 1 position {bad!r} (use 1, 2, 3 or leave blank)"], bad)
+        self.assertEqual(v.validate(H15, D4, headline_pins=['1.0'] + [''] * 14)[0], [])
+        problems, _ = v.validate(H15, D4, description_pins=['', '3', '', ''])
+        self.assertIn("Description 2 position '3' (use 1, 2 or leave blank)", problems)
 
     def test_position_on_blank_asset(self):
         problems, _ = v.validate(H15[:14] + [''], D4, headline_pins=[''] * 14 + ['2'])
@@ -115,9 +143,6 @@ class PinTest(unittest.TestCase):
         self.assertIn('pin at H3', text)
         self.assertIn('pin at D2', text)
 
-    def test_letter_prefixed_positions_accepted(self):
-        problems, _ = v.validate(H15, D4, headline_pins=['H1'] + [''] * 14, description_pins=['D1', '', '', ''])
-        self.assertEqual(problems, [])
 
 
 class CliTest(unittest.TestCase):
@@ -178,13 +203,88 @@ class CliTest(unittest.TestCase):
         write_csv([row], self.path('m.csv'))
         self.assertEqual(run([self.path('m.csv')])[0], 2)
 
-    def test_edits_keep_status_and_counts_print(self):
+    def test_edits_require_ad_id(self):
         write_csv([upload_row(Status='Enabled')], self.path('e.csv'))
+        self.assertEqual(run([self.path('e.csv'), '--edits'])[0], 2)
+        write_csv([upload_row(Status='Enabled', **{'Ad ID': ''})], self.path('b.csv'))
+        code, out = run([self.path('b.csv'), '--edits'])
+        self.assertEqual(code, 1)
+        self.assertIn('blank Ad ID', out)
+
+    def test_real_ui_export_utf16_tabs_title_rows(self):
+        write_csv([upload_row(), upload_row(**{'Headline 1': 'Different Opening'})], self.path('u.csv'))
+        text = ('Ad report\nOctober 1, 2026 - October 31, 2026\n'
+                'Campaign\tAd Group\tAd type\tAd status\tStatus\n'
+                'Search - Scheduling\tScheduling Software\tResponsive search ad\tEnabled\tApproved\n'
+                'Search - Scheduling\tScheduling Software\tResponsive search ad\tEnabled\tApproved\n'
+                'Total: Account\t\t\t\t\n')
+        with open(self.path('e.csv'), 'w', encoding='utf-16') as fh:
+            fh.write(text)
+        code, out = run([self.path('u.csv'), '--existing', self.path('e.csv')])
+        self.assertEqual(code, 0, out)
+        self.assertIn('2 enabled + 2 new = 4 RSAs', out)
+
+    def test_existing_without_serving_state_is_an_error(self):
+        write_csv([upload_row()], self.path('u.csv'))
+        write_csv([{'Campaign': 'Search - Scheduling', 'Ad Group': 'Scheduling Software',
+                    'Ad type': 'Responsive search ad', 'Status': 'Yes'}], self.path('e.csv'))
+        self.assertEqual(run([self.path('u.csv'), '--existing', self.path('e.csv')])[0], 2)
+
+    def test_single_status_column_counts_serving_states(self):
+        write_csv([upload_row()], self.path('u.csv'))
+        rows = [{'Campaign': 'Search - Scheduling', 'Ad Group': 'Scheduling Software',
+                 'Ad type': 'Responsive search ad', 'Status': s}
+                for s in ('Eligible', 'Approved (limited)', 'Campaign paused', 'Paused', 'Removed')]
+        rows.append({'Campaign': 'Search - Scheduling', 'Ad Group': 'Scheduling Software',
+                     'Ad type': 'Expanded text ad', 'Status': 'Eligible'})
+        write_csv(rows, self.path('e.csv'))
+        code, out = run([self.path('u.csv'), '--existing', self.path('e.csv')])
+        self.assertIn('3 enabled + 1 new = 4 RSAs', out)
+
+    def test_existing_with_no_rsas_counts_zero(self):
+        write_csv([upload_row()], self.path('u.csv'))
+        write_csv([{'Campaign': 'Search - Scheduling', 'Ad Group': 'Scheduling Software',
+                    'Ad type': 'Expanded text ad', 'Status': 'Eligible'}], self.path('e.csv'))
+        code, out = run([self.path('u.csv'), '--existing', self.path('e.csv')])
+        self.assertEqual(code, 0, out)
+
+    def test_export_encodings_title_rows_and_narrow_totals(self):
+        write_csv([upload_row(), upload_row(**{'Headline 1': 'Different Opening'})], self.path('u.csv'))
+        body = ('Campaign and ad group report, Ad group level\n'
+                'Campaign,Ad Group,Ad type,Status\n'
+                'Search - Scheduling,Scheduling Software,Responsive search ad,Enabled\n'
+                'Search - Scheduling,Scheduling Software,Responsive search ad,Enabled\n'
+                'Total: Account,\n')
+        for name, data in (('le.csv', body.encode('utf-16-le')), ('cp.csv', body.replace('Report', 'Café').encode('cp1252'))):
+            with open(self.path(name), 'wb') as fh:
+                fh.write(data)
+            code, out = run([self.path('u.csv'), '--existing', self.path(name)])
+            self.assertIn('2 enabled + 2 new = 4 RSAs', out, name)
+
+    def test_edits_rules(self):
+        rows = [upload_row(Status='Enabled', **{'Ad ID': '111'}),
+                upload_row(Status='Removed', **{'Ad ID': '111'}),
+                upload_row(Status='Enabled', **{'Ad ID': 'existing RSA 1 (ID needed)'})]
+        write_csv(rows, self.path('e.csv'))
+        code, out = run([self.path('e.csv'), '--edits'])
+        self.assertEqual(code, 1)
+        self.assertIn('a removed ad cannot be edited', out)
+        self.assertIn('Ad ID 111 repeats row 2', out)
+        self.assertIn('is a label, not an ID', out)
+
+    def test_ad_id_in_upload_is_a_problem(self):
+        write_csv([upload_row(**{'Ad ID': '123'})], self.path('u.csv'))
+        code, out = run([self.path('u.csv')])
+        self.assertEqual(code, 1)
+        self.assertIn('new ads have no ID', out)
+
+    def test_edits_keep_status_and_counts_print(self):
+        write_csv([upload_row(Status='Enabled', **{'Ad ID': '123456'})], self.path('e.csv'))
         code, out = run([self.path('e.csv'), '--edits', '--counts'])
         self.assertEqual(code, 0, out)
         self.assertIn('count Headline 1: 17 | Headline Number 1', out)
         self.assertNotIn('enabled-RSA limit not checked', out)
-        write_csv([upload_row(Status='Enabled', **{'Headline 2': 'x' * 31})], self.path('f.csv'))
+        write_csv([upload_row(Status='Enabled', **{'Headline 2': 'x' * 31, 'Ad ID': '1'})], self.path('f.csv'))
         self.assertEqual(run([self.path('f.csv'), '--edits'])[0], 1)
 
     def test_pins_flow_through_cli(self):
